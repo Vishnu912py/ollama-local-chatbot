@@ -1,0 +1,82 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local AI Chat</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #212121; color: #ECECEC; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        #chat-container { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .message { padding: 12px 18px; border-radius: 8px; max-width: 75%; line-height: 1.5; }
+        .user-message { background-color: #2F2F2F; align-self: flex-end; }
+        .ai-message { background-color: #171717; align-self: flex-start; border: 1px solid #333; }
+        #input-container { display: flex; padding: 20px; background-color: #2F2F2F; }
+        input[type="text"] { flex-grow: 1; padding: 12px; border-radius: 6px; border: 1px solid #444; background-color: #404040; color: white; font-size: 16px; outline: none;}
+        button { padding: 12px 24px; margin-left: 10px; border-radius: 6px; border: none; background-color: #10A37F; color: white; font-size: 16px; cursor: pointer; }
+        button:hover { background-color: #0E906F; }
+        .loading { font-style: italic; color: #888; }
+    </style>
+</head>
+<body>
+
+    <div id="chat-container">
+        <div class="message ai-message">Hello! I am your local AI. How can I help you today?</div>
+    </div>
+
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Message Local AI..." onkeypress="handleEnter(event)">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // 1. Add User Message to UI
+            addMessageToUI(message, 'user-message');
+            userInput.value = '';
+
+            // Add a temporary loading message
+            const loadingId = "loading-" + Date.now();
+            addMessageToUI("Thinking...", 'ai-message loading', loadingId);
+
+            // 2. Send request to our Python Server
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // 3. Remove loading message and add AI response
+                document.getElementById(loadingId).remove();
+                addMessageToUI(data.reply, 'ai-message');
+                
+            } catch (error) {
+                document.getElementById(loadingId).remove();
+                addMessageToUI("Error connecting to server.", 'ai-message');
+            }
+        }
+
+        function addMessageToUI(text, className, id = null) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${className}`;
+            msgDiv.textContent = text;
+            if (id) msgDiv.id = id;
+            chatContainer.appendChild(msgDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
