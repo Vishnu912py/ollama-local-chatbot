@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, render_template, request, jsonify
 import ollama
 
@@ -6,7 +5,18 @@ app = Flask(__name__)
 
 # This holds the memory of our conversation
 conversation_history = [
-    {"role": "system", "content": "You are a helpful, concise AI assistant."}
+    {
+        "role": "system", 
+        "content": """You are an AI assistant powered by the Qwen 2.5 architecture, developed by Alibaba Cloud. 
+        You are currently running locally on the user's computer. 
+        
+        Important facts to remember:
+        - Llama is a model family developed by Meta.
+        - Gemma is a model family developed by Google.
+        - You are Qwen, developed by Alibaba.
+        
+        If you do not know the answer to a question, admit it rather than guessing."""
+    }
 ]
 
 @app.route('/')
